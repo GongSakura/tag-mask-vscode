@@ -1,20 +1,31 @@
-import {
-  Range,
-  TextDocument,
-  TextDocumentWillSaveEvent,
-  window,
-  Position,
-} from "vscode";
+import { Range, TextDocument, TextDocumentWillSaveEvent, window } from "vscode";
 import { statusBar, WATCH_OFF, WATCH_ON } from "./statusBar";
 import { HTMLElement, parse } from "node-html-parser";
 
+export const extraTagMask = (e: TextDocumentWillSaveEvent) => {
+  const editor = window.activeTextEditor;
+  if (editor) {
+    const { document } = editor;
 
-export const extraTagMask = () => {};
+    editor.edit((editBuilder) => {
+      const content = document.getText();
+
+      const rawContent = restoreContent(content);
+      const range = new Range(
+        document.positionAt(0),
+        document.positionAt(content.length)
+      );
+    
+      editBuilder.replace(range, rawContent);
+    });
+  }
+ 
+};
 export const addTagMask = () => {
   const editor = window.activeTextEditor;
   if (editor) {
     const { document } = editor;
-    // console.info(`processedContent:`, content);
+
     editor.edit((editBuilder) => {
       const rawContent = document.getText();
 
@@ -23,7 +34,7 @@ export const addTagMask = () => {
         document.positionAt(0),
         document.positionAt(rawContent.length)
       );
-      console.info(`range:`,range)
+ 
       editBuilder.replace(range, content);
     });
   }
@@ -48,6 +59,25 @@ function processContent(content: string) {
           node.rawTagName = `${matchResult[0]}:${node.rawTagName}`;
         }
       }
+    }
+  }
+
+  search(root);
+  return root.toString();
+}
+
+function restoreContent(content: string) {
+  const root = parse(content);
+
+  function search(node: HTMLElement) {
+    node.childNodes.forEach((child: any) => {
+      if (child.nodeType === 1) {
+        search(child);
+      }
+    });
+
+    if (node?.nodeType === 1 && node?.rawTagName?.indexOf(":") >= 0) {
+      node.rawTagName = node.rawTagName.split(":").pop()!;
     }
   }
 

@@ -1,12 +1,10 @@
 import { StatusBarAlignment, StatusBarItem, window } from "vscode";
 
-const name = "tag-mask";
-export const WATCH_ON =  "$(eye-watch) "+name;
-export const WATCH_OFF = "$(eye-closed) "+name;
+const name = "Tag Mask";
 export const statusBar: StatusBarItem = window.createStatusBarItem(
   StatusBarAlignment.Right,
   -1
 );
 
 statusBar.name = name;
-statusBar.text = WATCH_ON;
+statusBar.text = name;
